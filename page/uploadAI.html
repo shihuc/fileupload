@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python多线程DEMO</title>
+    <link href="{{static_url('css/bootstrap.min.css')}}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{static_url('css/default.css')}}">
+    <link href="{{static_url('css/fileinput.css')}}" media="all" rel="stylesheet" type="text/css" />    
+    <script src="{{static_url('js/jquery-2.1.1.min.js')}}"></script>
+    <script src="{{static_url('js/fileinput.js')}}" type="text/javascript"></script>
+    <script src="{{static_url('js/bootstrap.min.js')}}" type="text/javascript"></script>
+    <script src="{{static_url('js/bootbox.js')}}" type="text/javascript"></script>
+</head>
+<body>
+    <div class="htmleaf-container">
+        <div class="container kv-main">
+           <div class="page-header">
+             <h2>Python concurrency demo<small></h2>
+           </div>
+           <form enctype="multipart/form-data" method="post">
+              <div class="form-group">
+                  {% module xsrf_form_html() %}
+                  <input type="file" name="tkai_file" id="tkai_input" multiple>
+              </div>
+              <hr>
+           </form>
+        </div>
+    </div>
+    <script>
+            $(document).ready(function() {
+                if(sessionStorage.image_ai_sequence == null || sessionStorage.image_ai_sequence == undefined){
+                    sessionStorage.image_ai_sequence = Date.parse(new Date());
+                }
+                var fileInput= $("#tkai_input").fileinput({
+                        uploadUrl: "/upload",
+                        uploadAsync: true,
+                        maxFileCount: 15,
+                        allowedFileExtensions : ['jpg','jpeg','png','gif'],//允许的文件类型
+                        showUpload: false,                                 //是否显示上传按钮
+                        showCaption: true,                                 //是否显示标题
+                        showPreview: true,
+                        autoReplace: true,
+                        dropZoneEnabled: true,               
+                        uploadExtraData: function() { return {'sequence': sessionStorage.image_ai_sequence, '_xsrf': document.getElementsByName('_xsrf')[0].value}} 
+                    }).on('filepreajax', function(event, previewId, index) {
+                        console.log('previewId:' + previewId + ', index: ' + index + ', seq: ' + sessionStorage.image_ai_sequence);
+                    }).on('filepreupload', function(event, data, previewId, index, jqXHR){
+                        //console.log('filepreupload');
+                    }).on('fileuploaded',function(event, data) {     //单个文件上传成功后的回调
+                        //console.log('fileuploaded');
+                        var res=data.response;
+                        if(res.result == "NOK"){
+                            ;                                        //如果后台处理的结果显示为NOK，说明识别效果没有达到预期，要重新传图片
+                        }else if (res.result == "OK"){
+                            sessionStorage.image_ai_sequence = Date.parse(new Date());       //识别效果达到预期，可以不用再传文件了。
+                            bootbox.alert("Result is acceptable!");
+                        }
+                   }).on('filecustomerror', function(event, params, msg) {
+                        //console.log(params)
+                        //console.log(msg)
+                   }).on('fileclear', function(event,data) {         //删除按钮对应的回调
+                        //console.log(data);
+                   }).on('filebatchuploadsuccess', function(event,data) { //批量上传文件对应的回调
+                        //console.log(data);
+                   });
+            });
+    </script>
+</body>
+</html>
